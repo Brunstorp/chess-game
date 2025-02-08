@@ -5,13 +5,13 @@ from pieces import Piece
 pygame.init()
 
 class GUI:
-    def __init__(self):
+    def __init__(self, size=600):
         # Initialize board
         self.chessboard = B.Board()
         self.chessboard.setup()
         
         # Window settings
-        self.WIDTH, self.HEIGHT = 600, 600
+        self.WIDTH = self.HEIGHT = size
         self.SQUARE_SIZE = self.WIDTH // 8
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption("Chess Game")
@@ -20,8 +20,13 @@ class GUI:
         self.load_images()
         
         # Draw the board and pieces intially
+        self.colors = [(255, 255, 255), (139, 69, 19)]  # White and Brown colorcodes
         self.draw_board()
         self.draw_pieces()
+        
+        # Selected piece
+        self.selected_piece = None
+        self.selected_position = None
         
         # Run the game
         self.run()
@@ -29,36 +34,49 @@ class GUI:
     def load_images(self):
         # Load piece images
         self.piece_images = {}
-        for color in ["white", "black"]:
-            for piece_type in ["pawn", "rook", "knight", "bishop", "queen", "king"]:
-                piece_name = f"{color}_{piece_type}"  # Example: "white_pawn"
+        colors = self.chessboard.colors
+        piece_types = self.chessboard.pieces.copy()  # Add pawn to the list of pieces and copy so we don't change in the original list
+        piece_types.append('Pawn')
+        
+        for color in colors:
+            for piece_type in piece_types:
+                piece_name = f"{color}_{piece_type}".lower()  # Example: "white_pawn"
                 image = pygame.image.load(f"../pictures/{piece_name}.png")
                 self.piece_images[piece_name] = pygame.transform.scale(
                     image,
                     (self.SQUARE_SIZE, self.SQUARE_SIZE)  # Scale to match board squares
                 )
-                
+          
+    # this is to go from say 'a1' to whatever that becomes in the window      
     def get_coordinates(self, position: str) -> tuple:
         col, row = position
         x = (ord(col) - 97) * self.SQUARE_SIZE
         y = (8 - int(row)) * self.SQUARE_SIZE
         return x, y
+    
+    # and this is obviously just the inverse of the above function
+    def get_position(self, x: int, y: int) -> str:
+        col = chr(x // self.SQUARE_SIZE + 97)
+        row = str(8 - y // self.SQUARE_SIZE)
+        return f'{col}{row}'
         
+    # this draws the pieces initially
     def draw_pieces(self):
         for row in range(8, 0, -1):  # Rows 8 to 1 (standard chess notation)
             for col in 'abcdefgh':  # Columns a to h
                 position = f'{col}{row}'
-                self.draw_piece(self.chessboard.board.get(position), position)
+                if position in self.chessboard.board:
+                    self.draw_piece(self.chessboard.board.get(position), position)
            
     # this is to draw a generic piece         
-    def draw_piece(self, piece: Piece, position: str):
-        piece = self.chessboard.board.get(position)
+    def draw_piece(self, piece: Piece, position: str, ):
         col, row = position
         if piece:
             piece_name = f"{piece.color}_{piece.type}".lower()
             x,y = self.get_coordinates(position)
             self.screen.blit(self.piece_images[piece_name], (x, y))
-            
+        
+    # this clears up the square    
     def clear_square(self, position: str):
         x, y = self.get_coordinates(position)
         color = self.colors[(x + y) % 2]
@@ -68,9 +86,9 @@ class GUI:
             pygame.Rect(x, y, self.SQUARE_SIZE, self.SQUARE_SIZE)
         )
 
+    # this draws the board
     def draw_board(self):
         """ Draw the chessboard """
-        self.colors = [(255, 255, 255), (139, 69, 19)]  # White and Brown
         for row in range(8):
             for col in range(8):
                 color = self.colors[(row + col) % 2]  # Alternate between white and black
@@ -80,6 +98,45 @@ class GUI:
                     pygame.Rect(col * self.SQUARE_SIZE, row * self.SQUARE_SIZE, self.SQUARE_SIZE, self.SQUARE_SIZE)
                 )
 
+    # later I might have to implemet a way for the computer to access aswell
+    def play_turn(self, event):
+        """Handle mouse clicks to select and move pieces."""
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left mouse button clicked
+            # Get the mouse position
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            col = mouse_x // self.SQUARE_SIZE
+            row = mouse_y // self.SQUARE_SIZE
+            position = self.get_position(mouse_x, mouse_y)  # Convert pixel position to board position
+
+            if not self.selected_piece:
+                # First click: Select a piece
+                selected_piece = self.chessboard.board.get(position)
+                if selected_piece:  # Check if there's a piece on the selected square
+                    self.selected_piece = selected_piece
+                    self.selected_position = position
+                    print('Selected:', self.selected_piece, self.selected_position)
+            else:
+                # Second click: Attempt to move the piece
+                print(f'Trying to move {self.selected_piece} from {self.selected_position} to {position}')
+                success = self.chessboard.move_piece(self.selected_position, position)
+                if success:
+                    self.move_piece(self.selected_piece, position)  # Update the board state and GUI
+                    print('Move successful!')
+                else:
+                    print('Invalid move.')
+                
+                # Deselect the piece after the move attempt
+                self.selected_piece = None
+                self.selected_position = None
+    
+    # this moves the piece in the window
+    def move_piece(self, piece: Piece, position: str):
+        self.draw_piece(piece, position)
+        self.clear_square(self.selected_position)
+        
+
+    # here we run the game
     def run(self):
         """ Main game loop """
         running = True
@@ -87,7 +144,10 @@ class GUI:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            self.clear_square('a1')
+                    
+                if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
+                    self.play_turn(event)
+            
             # Update the display
             pygame.display.flip()
 
@@ -96,4 +156,4 @@ class GUI:
 
 # Run the GUI
 if __name__ == '__main__':
-    gui = GUI()
+    gui = GUI(300)

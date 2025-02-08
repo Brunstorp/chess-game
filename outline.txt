@@ -1,0 +1,10 @@
+So the idea is essenially to create a chess game. Initally we just want to get it to work and move the pieces through the gui. Next I am going to implement the same thing but for accessible for a computer. 
+Afterwards (waaay down the line) the idea is to also build a chess computer and play against that
+I think next step is to start implementing legal moves
+I also need:
+check for checkmate, stalemate
+castling, and castling rightd
+promotion
+en passant
+
+and then who knows I might even build a chess960 emulator
