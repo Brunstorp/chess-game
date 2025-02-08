@@ -6,5 +6,8 @@ check for checkmate, stalemate
 castling, and castling rightd
 promotion
 en passant
+how are we going to handle checks?
+How am I going to handle pins?
+I just realized that it might be good to let the pieces also see the chessboard
 
 and then who knows I might even build a chess960 emulator

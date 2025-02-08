@@ -112,7 +112,9 @@ class GUI:
             if not self.selected_piece:
                 # First click: Select a piece
                 selected_piece = self.chessboard.board.get(position)
+                
                 if selected_piece:  # Check if there's a piece on the selected square
+                    #legal_moves = selected_piece.get_legal_moves()
                     self.selected_piece = selected_piece
                     self.selected_position = position
                     print('Selected:', self.selected_piece, self.selected_position)
@@ -130,8 +132,10 @@ class GUI:
                 self.selected_piece = None
                 self.selected_position = None
     
-    # this moves the piece in the window
+    # this moves the piece in the window, I think I can use this later when implementing special moves like castling
+    # position here is the position we are going to move the piece to, selected is the the one selected already
     def move_piece(self, piece: Piece, position: str):
+        self.clear_square(position)
         self.draw_piece(piece, position)
         self.clear_square(self.selected_position)
         
@@ -156,4 +160,4 @@ class GUI:
 
 # Run the GUI
 if __name__ == '__main__':
-    gui = GUI(300)
+    gui = GUI(900)
