@@ -12,10 +12,10 @@ class Board:
     def setup(self):
         pieces = ['Rook', 'Knight', 'Bishop', 'Queen', 'King', 'Bishop', 'Knight', 'Rook']
         for i, col in enumerate('abcdefgh'):
-            self.board[f'{col}2'] = P.Pawn('W', f'{col}2')
-            self.board[f'{col}7'] = P.Pawn('B', f'{col}7')
-            self.board[f'{col}1'] = getattr(P, pieces[i])('W', f'{col}1')
-            self.board[f'{col}8'] = getattr(P, pieces[i])('B', f'{col}8')
+            self.board[f'{col}2'] = P.Pawn('White', f'{col}2')
+            self.board[f'{col}7'] = P.Pawn('Black', f'{col}7')
+            self.board[f'{col}1'] = getattr(P, pieces[i])('White', f'{col}1')
+            self.board[f'{col}8'] = getattr(P, pieces[i])('Black', f'{col}8')
         
     def __str__(self):
         board = ''
