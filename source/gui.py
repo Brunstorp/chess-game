@@ -105,7 +105,7 @@ class GUI:
                 x = row*self.SQUARE_SIZE
                 y = col*self.SQUARE_SIZE
                 self.draw_square(x,y)
-
+                
     # later I might have to implemet a way for the computer to access aswell
     def play_turn(self, event):
         """Handle mouse clicks to select and move pieces."""
@@ -122,7 +122,6 @@ class GUI:
                 selected_piece = self.chessboard.board.get(clicked_position)
                 
                 if selected_piece:  # Check if there's a piece on the selected square
-                    
                     self.selected_piece = selected_piece
                     self.selected_position = clicked_position
                     print('Selected:', self.selected_piece, self.selected_position)
@@ -130,13 +129,14 @@ class GUI:
                     
             else:
                 # Second click: Attempt to move the piece
-                print(f'Trying to move {self.selected_piece} from {self.selected_position} to {clicked_position}')
+                print(f'Trying to move {self.selected_piece} from {self.selected_position} to {clicked_position}') 
+                # here I want to add that if we try to move to a square that is occupied by a piece of the same color, that square shpuld just be selected instead
                 success = self.chessboard.move_piece(self.selected_position, clicked_position)
                 if success:
                     self.move_piece(self.selected_piece, clicked_position)  # Update the board state and GUI
                     print('Move successful!')
                 else:
-                    print('Invalid move.')
+                    print('Did not move, try again.')
                 
                 # Deselect the piece after the move attempt
                 self.selected_piece = None

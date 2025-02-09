@@ -11,6 +11,9 @@ class Board:
         self.pieces = ['Rook', 'Knight', 'Bishop', 'Queen', 'King', 'Bishop', 'Knight', 'Rook']
         self.colors = ['White', 'Black']
         
+        # Game log
+        self.game_log = []
+        
     def setup(self):
         pieces = self.pieces
         colors = self.colors
@@ -32,24 +35,35 @@ class Board:
             board += '\n'
         return board    
     
+    def update_game_log(self, start_pos: tuple, end_pos: tuple, piece: str):
+        self.game_log.append(f'{self.turn} {piece} from {start_pos} to {end_pos}') # will fix a much nicer version here like an official chess game log
+    
     def switch_turn(self):  
         self.turn = 'White' if self.turn == 'Black' else 'Black'
     
     def move_piece(self, start: tuple, end: tuple) -> bool:
-        piece = self.board[start]
+        piece = self.board.get(start)
         
         if piece:
+            if piece.color != self.turn:
+                print(f'Not {piece.color}s turn')
+                return False
+            
             legal_moves = piece.get_legal_moves()
             if end not in legal_moves:
                 print('Invalid move')
                 return False
+            
             self.board[end] = piece
             self.board[start] = None
             piece.position = end
             
             if isinstance(piece,P.Pawn) or isinstance(piece,P.Rook) or isinstance(piece,P.King):
                 piece.has_moved = True
-                
+            
+            self.update_game_log(start, end, piece)
+            self.switch_turn()
+            
             return True
         
         else:

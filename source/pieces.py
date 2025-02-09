@@ -131,8 +131,42 @@ class Knight(Piece):
         super().__init__(color, 'Knight', position, board)
 
     def get_legal_moves(self):
-        # Example: Implement knight-specific logic using self.board
-        pass
+        # Retrieve the current board state and convert the knight's position (e.g., 'g1') into (x, y) coordinates.
+        board = self.board
+        x, y = self.position_to_coordinate(self.position)
+        
+        legal_moves = []
+        
+        # Define all eight L-shaped moves for a knight.
+        # Each tuple represents (dx, dy): the change in x and y coordinates.
+        moves = [
+            (2, 1),    # Two squares right, one square up.
+            (2, -1),   # Two squares right, one square down.
+            (-2, 1),   # Two squares left, one square up.
+            (-2, -1),  # Two squares left, one square down.
+            (1, 2),    # One square right, two squares up.
+            (1, -2),   # One square right, two squares down.
+            (-1, 2),   # One square left, two squares up.
+            (-1, -2)   # One square left, two squares down.
+        ]
+        
+        # Iterate over each possible knight move.
+        for dx, dy in moves:
+            target_x, target_y = x + dx, y + dy
+            target_position = self.coordinate_to_position((target_x, target_y))
+            
+            # Check if the target position is within the bounds of the board.
+            if not self.is_valid_position(target_position):
+                continue  # Skip this move if it's off the board.
+            
+            target_piece = board.get(target_position)
+            # The knight's move is legal if the target square is empty or occupied by an opponent's piece.
+            if not target_piece or target_piece.color != self.color:
+                legal_moves.append(target_position)
+            
+            print(f'{legal_moves} are the legal moves for the Knight.')
+            return legal_moves
+
 
 
 class Bishop(Piece):
@@ -219,6 +253,40 @@ class King(Piece):
         self.has_moved = False
 
     def get_legal_moves(self):
-        # Example: Implement king-specific logic using self.board
-        pass
+        # Get the current board and convert the king's position (e.g., 'e4') to (x, y) coordinates.
+        board = self.board
+        x, y = self.position_to_coordinate(self.position)
+        
+        legal_moves = []
+        
+        # The king can move one square in any of the eight directions.
+        directions = [
+            (1, 1),   # Up-Right
+            (1, -1),  # Down-Right
+            (-1, 1),  # Up-Left
+            (-1, -1), # Down-Left
+            (0, 1),   # Up
+            (0, -1),  # Down
+            (1, 0),   # Right
+            (-1, 0)   # Left
+        ]
+        
+        # Check each direction for a valid move.
+        for dx, dy in directions:
+            # Calculate the target coordinates by moving one square in the given direction.
+            target_x, target_y = x + dx, y + dy
+            target_position = self.coordinate_to_position((target_x, target_y))
+            
+            # Ensure the target position is on the board.
+            if not self.is_valid_position(target_position):
+                continue  # Skip this direction if it goes off the board.
+            
+            target_piece = board.get(target_position)
+            # A move is legal if the target square is empty or contains an opponent's piece.
+            if not target_piece or target_piece.color != self.color:
+                legal_moves.append(target_position)
+        
+        print(f'{legal_moves} are the legal moves for the King.')
+        return legal_moves
+
 
