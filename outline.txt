@@ -11,3 +11,16 @@ How am I going to handle pins?
 I just realized that it might be good to let the pieces also see the chessboard
 
 and then who knows I might even build a chess960 emulator
+
+pawn:
+moves correctly, haven't implemented en passant nor promotion
+
+rook:
+
+king:
+
+queen:
+
+knight:
+
+bishop:

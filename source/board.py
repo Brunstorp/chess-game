@@ -32,16 +32,24 @@ class Board:
             board += '\n'
         return board    
     
+    def switch_turn(self):  
+        self.turn = 'White' if self.turn == 'Black' else 'Black'
+    
     def move_piece(self, start: tuple, end: tuple) -> bool:
         piece = self.board[start]
-        #legal_moves = piece.get_legal_moves()
+        
         if piece:
+            legal_moves = piece.get_legal_moves()
+            if end not in legal_moves:
+                print('Invalid move')
+                return False
             self.board[end] = piece
             self.board[start] = None
             piece.position = end
             
             if isinstance(piece,P.Pawn) or isinstance(piece,P.Rook) or isinstance(piece,P.King):
                 piece.has_moved = True
+                
             return True
         
         else:

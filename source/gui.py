@@ -20,7 +20,7 @@ class GUI:
         self.load_images()
         
         # Draw the board and pieces intially
-        self.colors = [(255, 255, 255), (139, 69, 19)]  # White and Brown colorcodes
+        self.colors = [(255, 255, 255), (139, 69, 19)]  # White and Brown color codes
         self.draw_board()
         self.draw_pieces()
         
@@ -48,7 +48,7 @@ class GUI:
                 )
           
     # this is to go from say 'a1' to whatever that becomes in the window      
-    def get_coordinates(self, position: str) -> tuple:
+    def get_window_coordinates(self, position: str) -> tuple:
         col, row = position
         x = (ord(col) - 97) * self.SQUARE_SIZE
         y = (8 - int(row)) * self.SQUARE_SIZE
@@ -69,34 +69,42 @@ class GUI:
                     self.draw_piece(self.chessboard.board.get(position), position)
            
     # this is to draw a generic piece         
-    def draw_piece(self, piece: Piece, position: str, ):
+    def draw_piece(self, piece: Piece, position: tuple, ):
         col, row = position
         if piece:
             piece_name = f"{piece.color}_{piece.type}".lower()
-            x,y = self.get_coordinates(position)
+            x,y = self.get_window_coordinates(position)
             self.screen.blit(self.piece_images[piece_name], (x, y))
+            
+    def draw_square(self,x:int,y:int): # this takes in the coordinates in the window
+        color = self.colors[((x + y) // self.SQUARE_SIZE) % 2]
+        pygame.draw.rect(
+                    self.screen,
+                    color,
+                    pygame.Rect(x, y, self.SQUARE_SIZE, self.SQUARE_SIZE)
+                )
         
     # this clears up the square    
     def clear_square(self, position: str):
-        x, y = self.get_coordinates(position)
-        color = self.colors[(x + y) % 2]
-        pygame.draw.rect(
-            self.screen,
-            color,
-            pygame.Rect(x, y, self.SQUARE_SIZE, self.SQUARE_SIZE)
-        )
+        x, y = self.get_window_coordinates(position)
+        print(f'trying to clear {position} with coordinates {x,y}')
+        self.draw_square(x,y)
+        
+    # this moves the piece in the window, I think I can use this later when implementing special moves like castling
+    # position here is the position we are going to move the piece to, selected is the the one selected already
+    def move_piece(self, piece: Piece, position: str):
+        self.clear_square(position)
+        self.draw_piece(piece, position)
+        self.clear_square(self.selected_position)
 
     # this draws the board
     def draw_board(self):
         """ Draw the chessboard """
         for row in range(8):
             for col in range(8):
-                color = self.colors[(row + col) % 2]  # Alternate between white and black
-                pygame.draw.rect(
-                    self.screen,
-                    color,
-                    pygame.Rect(col * self.SQUARE_SIZE, row * self.SQUARE_SIZE, self.SQUARE_SIZE, self.SQUARE_SIZE)
-                )
+                x = row*self.SQUARE_SIZE
+                y = col*self.SQUARE_SIZE
+                self.draw_square(x,y)
 
     # later I might have to implemet a way for the computer to access aswell
     def play_turn(self, event):
@@ -107,23 +115,25 @@ class GUI:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             col = mouse_x // self.SQUARE_SIZE
             row = mouse_y // self.SQUARE_SIZE
-            position = self.get_position(mouse_x, mouse_y)  # Convert pixel position to board position
+            clicked_position = self.get_position(mouse_x, mouse_y)  # Convert pixel position to board position
 
             if not self.selected_piece:
                 # First click: Select a piece
-                selected_piece = self.chessboard.board.get(position)
+                selected_piece = self.chessboard.board.get(clicked_position)
                 
                 if selected_piece:  # Check if there's a piece on the selected square
-                    #legal_moves = selected_piece.get_legal_moves()
+                    
                     self.selected_piece = selected_piece
-                    self.selected_position = position
+                    self.selected_position = clicked_position
                     print('Selected:', self.selected_piece, self.selected_position)
+                    legal_moves = selected_piece.get_legal_moves()
+                    
             else:
                 # Second click: Attempt to move the piece
-                print(f'Trying to move {self.selected_piece} from {self.selected_position} to {position}')
-                success = self.chessboard.move_piece(self.selected_position, position)
+                print(f'Trying to move {self.selected_piece} from {self.selected_position} to {clicked_position}')
+                success = self.chessboard.move_piece(self.selected_position, clicked_position)
                 if success:
-                    self.move_piece(self.selected_piece, position)  # Update the board state and GUI
+                    self.move_piece(self.selected_piece, clicked_position)  # Update the board state and GUI
                     print('Move successful!')
                 else:
                     print('Invalid move.')
@@ -132,14 +142,6 @@ class GUI:
                 self.selected_piece = None
                 self.selected_position = None
     
-    # this moves the piece in the window, I think I can use this later when implementing special moves like castling
-    # position here is the position we are going to move the piece to, selected is the the one selected already
-    def move_piece(self, piece: Piece, position: str):
-        self.clear_square(position)
-        self.draw_piece(piece, position)
-        self.clear_square(self.selected_position)
-        
-
     # here we run the game
     def run(self):
         """ Main game loop """
