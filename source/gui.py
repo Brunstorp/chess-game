@@ -5,11 +5,9 @@ from pieces import Piece
 pygame.init()
 
 class GUI:
-    def __init__(self, size=600):
+    def __init__(self, size=600, chessboard = None):
         # Initialize board
-        self.chessboard = B.Board()
-        self.chessboard.setup()
-        
+        self.chessboard = chessboard
         # Window settings
         self.WIDTH = self.HEIGHT = size
         self.SQUARE_SIZE = self.WIDTH // 8
@@ -29,11 +27,13 @@ class GUI:
         self.selected_position = None
         
         # Run the game
-        self.run()
+        self.running = False
         
     def load_images(self):
         # Load piece images
         self.piece_images = {}
+        if not self.chessboard: # makes sure we can have a clear testing board
+            return
         colors = self.chessboard.colors
         piece_types = self.chessboard.pieces.copy()  # Add pawn to the list of pieces and copy so we don't change in the original list
         piece_types.append('Pawn')
@@ -69,7 +69,10 @@ class GUI:
                     self.draw_piece(self.chessboard.board.get(position), position)
            
     # this is to draw a generic piece         
-    def draw_piece(self, piece: Piece, position: tuple, ):
+    def draw_piece(self, piece: Piece, position: tuple):
+        if not piece:
+            return
+        
         col, row = position
         if piece:
             piece_name = f"{piece.color}_{piece.type}".lower()
@@ -125,11 +128,11 @@ class GUI:
                     self.selected_piece = selected_piece
                     self.selected_position = clicked_position
                     print('Selected:', self.selected_piece, self.selected_position)
-                    
-                    
+                       
             else:
                 # Second click: Attempt to move the piece
                 print(f'Trying to move {self.selected_piece} from {self.selected_position} to {clicked_position}') 
+                
                 # here I want to add that if we try to move to a square that is occupied by a piece of the same color, that square shpuld just be selected instead
                 success = self.chessboard.play_turn(self.selected_position, clicked_position)
                 if success:
@@ -145,11 +148,11 @@ class GUI:
     # here we run the game
     def run(self):
         """ Main game loop """
-        running = True
-        while running:
+        self.running = True
+        while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    running = False
+                    self.running = False
                     
                 if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
                     self.play_turn(event)
@@ -162,4 +165,8 @@ class GUI:
 
 # Run the GUI
 if __name__ == '__main__':
-    gui = GUI(900)
+    chessboard = B.Board()
+    chessboard.setup()
+    gui = GUI(900, chessboard)
+    gui.run()    
+    
