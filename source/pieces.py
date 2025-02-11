@@ -5,17 +5,35 @@ class Piece:
         self.position = position
         self.board = board  # Store the board as an instance variable
         self.is_pinned = False
+        self.legal_moves = self.calculate_legal_moves()
 
     def __str__(self):
         return self.color + self.type
     
-    def get_piece_on(self,position):
+    def get_piece_on(self,position): # this returns the piece on the board of position
         return self.board.get(position)
+    
+    def get_legal_moves(self) -> list: #This returns the legal moves of the piece
+        return self.legal_moves
 
-    def get_legal_moves(self) -> list:
+    def calculate_legal_moves(self) -> list:
         pass
+    
+    def update_legal_moves(self):
+        self.legal_moves = self.calculate_legal_moves()
+    
+    def is_pinned(self):
+        pass
+    
+    def calculate_pinned(self):
+        pass
+    
+    def set_position(self, position): # this sets the position of the piece
+        self.position = position
 
     def is_valid_position(self, position): # this checks if the square is inside the grid, maybe not necessary but nice to have
+        if len(position) != 2:
+            return False
         col, row = position
         if col not in 'abcdefgh' or row not in '12345678':
             return False
@@ -51,6 +69,9 @@ class Pawn(Piece):
         super().__init__(color, 'Pawn', position, board)
         self.has_moved = False
         
+    def en_passant(self):
+        pass
+        
     def get_legal_moves(self) -> list:
         possible_moves = []
         if self.is_pinned:
@@ -63,7 +84,7 @@ class Pawn(Piece):
         direction = 1 if self.color == 'White' else -1
 
         # Move forward by 1 square (only if the square is empty)
-        if  not board.get(self.coordinate_to_position((x, y + direction))):
+        if not board.get(self.coordinate_to_position((x, y + direction))):
             possible_moves.append((x, y + direction))
 
         # Move forward by 2 squares on the first move (only if both squares are empty)
@@ -96,7 +117,7 @@ class Rook(Piece):
         super().__init__(color, 'Rook', position, board)
         self.has_moved = False
 
-    def get_legal_moves(self):
+    def calculate_legal_moves(self):
         board = self.board
         x, y = self.position_to_coordinate(self.position)
         
@@ -130,7 +151,7 @@ class Knight(Piece):
     def __init__(self, color, position, board: dict):
         super().__init__(color, 'Knight', position, board)
 
-    def get_legal_moves(self):
+    def calculate_legal_moves(self):
         # Retrieve the current board state and convert the knight's position (e.g., 'g1') into (x, y) coordinates.
         board = self.board
         x, y = self.position_to_coordinate(self.position)
@@ -154,27 +175,29 @@ class Knight(Piece):
         for dx, dy in moves:
             target_x, target_y = x + dx, y + dy
             target_position = self.coordinate_to_position((target_x, target_y))
+            print(f'{target_position }is targetposition for {self.color}{self.position} knight')
             
-            # Check if the target position is within the bounds of the board.
-            if not self.is_valid_position(target_position):
-                continue  # Skip this move if it's off the board.
+            target_position = self.coordinate_to_position((target_x, target_y))
+            if not self.is_valid_move(target_position):  # Check if valid move
+                continue  # Skip this move if it goes off the board
             
             target_piece = board.get(target_position)
-            # The knight's move is legal if the target square is empty or occupied by an opponent's piece.
-            if not target_piece or target_piece.color != self.color:
+
+            if not target_piece:  # Empty square
                 legal_moves.append(target_position)
-            
-            print(f'{legal_moves} are the legal moves for the Knight.')
-            return legal_moves
-
-
+            else:
+                if target_piece.color != self.color:  # Opponent's piece
+                    legal_moves.append(target_position)
+              
+        
+        return legal_moves
 
 class Bishop(Piece):
     
     def __init__(self, color, position, board: dict):
         super().__init__(color, 'Bishop', position, board)
 
-    def get_legal_moves(self):
+    def calculate_legal_moves(self):
         board = self.board
         x, y = self.position_to_coordinate(self.position)
         
@@ -188,7 +211,7 @@ class Bishop(Piece):
             for i in range(1, 8):  # Maximum range for a bishop
                 target_x, target_y = x + i * dx, y + i * dy
                 target_position = self.coordinate_to_position((target_x, target_y))
-                if not self.is_valid_position(target_position):  # Check if within bounds
+                if not self.is_valid_move(target_position):  # Check if within bounds
                     break  # Stop searching in this direction
                 
                 
@@ -208,8 +231,9 @@ class Bishop(Piece):
 class Queen(Piece):
     def __init__(self, color, position, board: dict):
         super().__init__(color, 'Queen', position, board)
+        
 
-    def get_legal_moves(self):
+    def calculate_legal_moves(self):
         board = self.board
         x, y = self.position_to_coordinate(self.position)
         
@@ -229,7 +253,7 @@ class Queen(Piece):
             for i in range(1, 8):  # Maximum range for a queen
                 target_x, target_y = x + i * dx, y + i * dy
                 target_position = self.coordinate_to_position((target_x, target_y))
-                if not self.is_valid_position(target_position):  # Check if within bounds
+                if not self.is_valid_move(target_position):  # Check if within bounds
                     break  # Stop searching in this direction
                 
                 
@@ -251,8 +275,15 @@ class King(Piece):
     def __init__(self, color, position, board: dict):
         super().__init__(color, 'King', position, board)
         self.has_moved = False
+        self.is_checked = False
+        
+    def calculate_castling_moves(self): # this is to calculate the castling moves
+        castling_moves = []
+        if self.has_moved:
+            return castling_moves  # King cannot castle if it has moved
+        x,y = self.get_coordinates(self.position)
 
-    def get_legal_moves(self):
+    def calculate_legal_moves(self):
         # Get the current board and convert the king's position (e.g., 'e4') to (x, y) coordinates.
         board = self.board
         x, y = self.position_to_coordinate(self.position)
@@ -278,7 +309,7 @@ class King(Piece):
             target_position = self.coordinate_to_position((target_x, target_y))
             
             # Ensure the target position is on the board.
-            if not self.is_valid_position(target_position):
+            if not self.is_valid_move(target_position):
                 continue  # Skip this direction if it goes off the board.
             
             target_piece = board.get(target_position)

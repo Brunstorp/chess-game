@@ -125,13 +125,13 @@ class GUI:
                     self.selected_piece = selected_piece
                     self.selected_position = clicked_position
                     print('Selected:', self.selected_piece, self.selected_position)
-                    legal_moves = selected_piece.get_legal_moves()
+                    
                     
             else:
                 # Second click: Attempt to move the piece
                 print(f'Trying to move {self.selected_piece} from {self.selected_position} to {clicked_position}') 
                 # here I want to add that if we try to move to a square that is occupied by a piece of the same color, that square shpuld just be selected instead
-                success = self.chessboard.move_piece(self.selected_position, clicked_position)
+                success = self.chessboard.play_turn(self.selected_position, clicked_position)
                 if success:
                     self.move_piece(self.selected_piece, clicked_position)  # Update the board state and GUI
                     print('Move successful!')

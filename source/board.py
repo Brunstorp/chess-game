@@ -3,9 +3,7 @@ import pieces as P
 class Board:
     def __init__(self):
         self.board = {}
-        for row in range(1, 9):
-            for col in 'abcdefgh':
-                self.board[f'{col}{row}'] = None
+        
         self.winner = None
         self.turn = 'White'
         self.pieces = ['Rook', 'Knight', 'Bishop', 'Queen', 'King', 'Bishop', 'Knight', 'Rook']
@@ -13,6 +11,9 @@ class Board:
         
         # Game log
         self.game_log = []
+        
+        # Initialize board with legal moves
+        self.calculate_all_legal_moves()
         
     def setup(self):
         pieces = self.pieces
@@ -40,31 +41,44 @@ class Board:
     
     def switch_turn(self):  
         self.turn = 'White' if self.turn == 'Black' else 'Black'
+        
+    def calculate_all_legal_moves(self) -> list:
+        for piece in self.board.values():
+            if piece:
+                piece.update_legal_moves()
     
-    def move_piece(self, start: tuple, end: tuple) -> bool:
+    def move_piece(self, start: tuple, end: tuple, piece: P) -> bool:
+        if piece.color != self.turn:
+                print(f'Not {piece.color}s turn')
+                return False
+        
+        legal_moves = piece.get_legal_moves()
+        
+        if end in legal_moves:
+            self.board[end] = piece
+            self.board.pop(start)
+            piece.set_position(end)
+            return True
+        
+        if end not in legal_moves:
+            print('Invalid move')
+            return False
+        
+    def play_turn(self, start: tuple, end: tuple) -> bool: # tries to play the turn the piece from start to end and returns true if successful
+        
         piece = self.board.get(start)
         
         if piece:
-            if piece.color != self.turn:
-                print(f'Not {piece.color}s turn')
-                return False
+            piece_moved = self.move_piece(start, end, piece)
+            if piece_moved:
             
-            legal_moves = piece.get_legal_moves()
-            if end not in legal_moves:
-                print('Invalid move')
-                return False
-            
-            self.board[end] = piece
-            self.board[start] = None
-            piece.position = end
-            
-            if isinstance(piece,P.Pawn) or isinstance(piece,P.Rook) or isinstance(piece,P.King):
-                piece.has_moved = True
-            
-            self.update_game_log(start, end, piece)
-            self.switch_turn()
-            
-            return True
+                if isinstance(piece,P.Pawn) or isinstance(piece,P.Rook) or isinstance(piece,P.King):
+                    piece.has_moved = True
+                    
+                self.calculate_all_legal_moves()
+                self.update_game_log(start, end, piece)
+                self.switch_turn()
+                return True
         
         else:
             print('No piece at that position')
