@@ -16,11 +16,19 @@ class Piece:
     def get_piece_on(self,position): # this returns the piece on the board of position
         return self.board.get_at_position(position)
     
+    '''def clear_up_checking_moves(self, moves):
+        #print(f'{moves} are the moves')
+        from_position = self.position
+        for move in moves:
+            if self.board.move_puts_king_in_check(from_position, move):
+                moves.remove(move)
+        return moves'''
+    
     def update_legal_moves(self):
         self.legal_moves = self.calculate_legal_moves()
     
-    def get_legal_moves(self) -> list: #This returns the legal moves of the piece
-        return self.legal_moves
+    def get_legal_moves(self) -> list: #This returns the legal moves of the piece, and clears the moves which would put the king in check for that person
+        return  self.legal_moves
 
     def calculate_legal_moves(self) -> list:
         pass
@@ -36,17 +44,6 @@ class Piece:
     
     def is_pinned(self):
         pass
-    
-    # we want to calculate if moving the piece to a certain position would put the king in check
-    # returns true if it would put the king in check
-    def calculate_move_out_of_check(self, position: str) -> bool:
-        
-        # We move in a simulated board to check if the king is in check
-        temp_board = self.board.copy()
-        temp_board.move_piece(self.position, position, self)
-        temp_board.update_all_legal_moves()
-        
-        return temp_board.is_king_in_check(self.color)
     
     def set_position(self, position): # this sets the position of the piece
         self.position = position
@@ -98,10 +95,8 @@ class Pawn(Piece):
         super().__init__(color, 'Pawn', position, board)
         self.has_moved = False
         
+    # this needs to handle enpassant and promotion
     def calculate_special_moves(self):
-        pass
-    
-    def calculate_legal_captures(self):
         pass
         
     def calculate_legal_moves(self) -> list:
@@ -303,6 +298,7 @@ class King(Piece):
         self.has_moved = False
         self.is_checked = False
         
+    # This needs to handle castling
     def calculate_special_moves(self):
         pass
                         

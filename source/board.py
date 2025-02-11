@@ -1,8 +1,8 @@
 import pieces as P
 
 class Board:
-    def __init__(self):
-        self.board = {} # setup for the actual data representation of the board
+    def __init__(self, board: dict = {}):
+        self.board = board # setup for the actual data representation of the board
         self.pieces_dict = {}
         self.winner = None
         
@@ -18,10 +18,6 @@ class Board:
         
         # Game log
         self.game_log = []
-        
-        # setup pieces dict
-        if len(self.board) > 0:
-            self.setup_pieces_dict()
         
     def setup(self):
         pieces = self.pieces
@@ -39,20 +35,31 @@ class Board:
             self.board[f'{col}1'] = white_piece
             self.board[f'{col}8'] = black_piece
             
+        self.setup_pieces_dict()
+            
     # this also needs to be called outside of the init function to make sure the pieces_dict is updated
     def setup_pieces_dict(self):
         for piece in self.board.values():
             if piece:
                 self.pieces_dict[str(piece)] = piece
+    
+    # we want to calculate if moving the piece to a certain position would put the king in check
+    # returns true if it would put the king in check
+    '''def move_puts_king_in_check(self, from_position:str, to_position: str) -> bool:
+        # we have already checked if there is a piece at from_position
         
-                                 
-    def access_piece(self, color_type: str) -> P:
-        return self.pieces_dict.get(color_type)
-            
+        piece = self.get_at_position(from_position)
+        # We move in a simulated board to check if the king is in check
+        temp_board = self.copy()
+        temp_board.move_piece(from_position, to_position, self)
+        temp_board.update_all_legal_moves()
+        
+        return temp_board.is_king_in_check(self.color)'''
+    
+    # checks if the king is in check for a given color
     def is_king_in_check(self, color: str) -> bool:
         search_string = f'{color}King'
-        print("search str is:", search_string)
-        king = self.access_piece(search_string)
+        king = self.pieces_dict.get(search_string)
         
         if king:
             king_position = king.get_position()
@@ -110,6 +117,7 @@ class Board:
         #print("Checking if square is safe for", color, position)
         if position in legal_moves:
             return False
+        
         return True
     
     def place_piece(self, piece: P, position: str):
@@ -117,18 +125,16 @@ class Board:
     
     def remove_piece(self, position: str):
         self.board.pop(position)
-        self.pieces_set.remove(self.board[position])
         
     def get_at_position(self, position: str) -> P: # returns the piece (or None) at a given position
         return self.board.get(position)
      
     def move_piece(self, start: tuple, end: tuple, piece: P) -> bool:
+        legal_moves = piece.get_legal_moves()
+        
         if piece.color != self.turn:
                 print(f'Not {piece.color}s turn')
                 return False
-            
-        legal_moves = piece.get_legal_moves()
-        #special_moves = piece.get_special_moves()
         
         if end in legal_moves:
             self.board[end] = piece
@@ -144,9 +150,6 @@ class Board:
         # Initialize board with legal moves
         self.update_all_legal_moves()
         
-        # check who's turn it is
-        is_king_in_check = self.is_king_in_check(self.turn)
-        
         piece = self.board.get(start)
         
         if piece:
@@ -155,17 +158,30 @@ class Board:
             if piece_moved:
                 if isinstance(piece,P.Pawn) or isinstance(piece,P.Rook) or isinstance(piece,P.King):
                     piece.has_moved = True
-                    
-                self.update_all_legal_moves()
-                self.set_all_legal_moves()
-                self.update_game_log(start, end, piece)
-                if not self.testing: self.switch_turn() # I use the testing variable to avoid switching turns when testing
                 
+                # this updates all the legal_moves for the pieces, do this after turn is played  
+                self.update_all_legal_moves()
+                
+                # here we set the legal moves for each player locally, just to check if the king is in check later
+                self.set_all_legal_moves()
+                
+                # here we update the game log
+                self.update_game_log(start, end, piece)
+                
+                # I use the testing variable to avoid switching turns when testing
+                if not self.testing: self.switch_turn() 
+                
+                # 
+                is_next_player_in_check = self.is_king_in_check(self.turn)
                 return True
         
         else:
             print('No piece at that position')
             return False
+        
+    def copy(self):
+        """Creates a new instance of the same class with the same attributes."""
+        return Board(board = self.board.copy())
         
     def __str__(self):
         board = ''
@@ -178,4 +194,6 @@ class Board:
                     board += ''
             board += '\n'
         return board   
+    
+    
         
