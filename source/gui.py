@@ -90,7 +90,7 @@ class GUI:
     # this clears up the square    
     def clear_square(self, position: str):
         x, y = self.get_window_coordinates(position)
-        print(f'trying to clear {position} with coordinates {x,y}')
+        #print(f'trying to clear {position} with coordinates {x,y}')
         self.draw_square(x,y)
         
     # this moves the piece in the window, I think I can use this later when implementing special moves like castling

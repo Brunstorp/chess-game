@@ -39,9 +39,14 @@ class Piece:
     
     # we want to calculate if moving the piece to a certain position would put the king in check
     # returns true if it would put the king in check
-    def calculate_pinned(self, position: str) -> bool:
+    def calculate_move_out_of_check(self, position: str) -> bool:
         
-        pass
+        # We move in a simulated board to check if the king is in check
+        temp_board = self.board.copy()
+        temp_board.move_piece(self.position, position, self)
+        temp_board.update_all_legal_moves()
+        
+        return temp_board.is_king_in_check(self.color)
     
     def set_position(self, position): # this sets the position of the piece
         self.position = position
@@ -94,6 +99,9 @@ class Pawn(Piece):
         self.has_moved = False
         
     def calculate_special_moves(self):
+        pass
+    
+    def calculate_legal_captures(self):
         pass
         
     def calculate_legal_moves(self) -> list:
@@ -247,7 +255,6 @@ class Bishop(Piece):
         
         #print(f'{legal_moves} are the legal moves')
         return legal_moves
-
 
 class Queen(Piece):
     def __init__(self, color, position, board: B):

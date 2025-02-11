@@ -9,7 +9,8 @@ def test_castling(chessboard: B):
 
 if __name__ == '__main__':
     testboard = B.Board()
-    testboard.testing = True
+    testboard.testing = False
     test_castling(testboard)
+    testboard.setup_pieces_dict()
     gui = G.GUI(900, testboard)
     gui.run()
