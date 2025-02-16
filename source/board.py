@@ -55,5 +55,45 @@ class Board:
             board += '\n'
         return board   
     
+    # Column to letter, row to 1-based index
+    def coordinate_to_position(self, coordinate: tuple) -> str:
+        col, row = coordinate
+        position = f'{chr(col + 97)}{row + 1}'  
+        return position
+
+    # Convert chess position (e.g., 'a1') to 0-7 coordinates
+    def position_to_coordinate(self, position: str) -> tuple:
+        col, row = position
+        coordinate = (ord(col) - 97, int(row) - 1)  # Letter to column index, 1-based to 0-based
+        return coordinate
+    
+    # this checks if the square is inside the grid
+    def is_valid_position(self, position: str): 
+        if len(position) != 2:
+            return False
+        
+        col, row = position
+        if col not in 'abcdefgh' or row not in '12345678':
+            return False
+        return True
+    
+    # this checks if a move is valid, i.e doesnt go outside and is not the same color as the piece
+    def is_valid_move(self, move_position: str, piece: Piece) -> bool:
+        # since we cannot click outside the square this works
+        is_valid_position = self.is_valid_position(move_position)
+        
+        if self.get_piece_at_position(move_position) == None: 
+            return is_valid_position
+        else:
+            # we check if it is not the same color as it's own and if it is a valid position
+            return is_valid_position and not self.get_piece_at_position(move_position).color == piece.color 
+        
+    def get_legal_moves_player(self, color: str) -> list:
+        legal_moves = []
+        for position, piece in self.board.items():
+            if piece and piece.color == color:
+                legal_moves.extend(piece.get_legal_moves())
+        return legal_moves
+    
     
         

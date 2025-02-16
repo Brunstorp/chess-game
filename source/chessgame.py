@@ -1,5 +1,7 @@
 import board as Board
 import piece as Piece
+import mover as Mover
+
 
 # this class keeps track of all the game logic
 class ChessGame:
@@ -39,7 +41,7 @@ class ChessGame:
         for piece in current_board.values():
             if piece:
                 piece.update_legal_moves()
-    
+                
     def move_piece(self, start: tuple, end: tuple, piece: Piece) -> bool:
         
         legal_moves = piece.get_legal_moves()

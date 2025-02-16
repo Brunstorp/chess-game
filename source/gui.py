@@ -2,6 +2,7 @@ import pygame
 import chessgame as ChessGame  # Assuming you have a separate `board.py` with a Board class.
 import board as Board
 from piece import Piece
+
 # Initialize pygame
 pygame.init()
 
@@ -76,10 +77,12 @@ class GUI:
            
     # this is to draw a generic piece         
     def draw_piece(self, piece: Piece, position: tuple):
+        
         if not piece:
             return
         
         col, row = position
+        
         if piece:
             piece_name = f"{piece.color}_{piece.type}".lower()
             x,y = self.get_window_coordinates(position)
@@ -92,19 +95,6 @@ class GUI:
                     color,
                     pygame.Rect(x, y, self.SQUARE_SIZE, self.SQUARE_SIZE)
                 )
-        
-    # this clears up the square    
-    def clear_square(self, position: str):
-        x, y = self.get_window_coordinates(position)
-        #print(f'trying to clear {position} with coordinates {x,y}')
-        self.draw_square(x,y)
-        
-    # this moves the piece in the window, I think I can use this later when implementing special moves like castling
-    # position here is the position we are going to move the piece to, selected is the the one selected already
-    def move_piece(self, piece: Piece, position: str):
-        self.clear_square(position)
-        self.draw_piece(piece, position)
-        self.clear_square(self.selected_position)
 
     # this draws the board
     def draw_board(self):
@@ -146,7 +136,6 @@ class GUI:
                 success = self.chessgame.play_turn(self.selected_position, clicked_position)
                 
                 if success:
-                    self.move_piece(self.selected_piece, clicked_position)  # Update the board state and GUI
                     print('Move successful!')
                 else:
                     print('Did not move, try again.')
@@ -164,9 +153,14 @@ class GUI:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                    break
                     
                 if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP):
                     self.play_turn(event)
+            
+            # realized it is so fast that I can just brute force the whole thing, sometimes it is nice to be lazy engineering
+            self.draw_board()
+            self.draw_all_pieces()
             
             # Update the display
             pygame.display.flip()
