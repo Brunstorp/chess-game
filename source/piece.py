@@ -1,73 +1,35 @@
-import board as B
+import board as Board
+import move as Move
 
 class Piece:
-    def __init__(self, color, type, position, board: B):
+    def __init__(self, color, type, position, board: Board):
         self.color = color
         self.type = type
         self.position = position
         self.board = board  # Store the board as an instance variable
         self.is_pinned = False
         self.legal_moves = []
-        self.special_moves = []
 
     def __str__(self):
         return self.color + self.type
     
-    def get_piece_on(self,position): # this returns the piece on the board of position
-        return self.board.get_at_position(position)
+    # this sets the position of the piece
+    def set_position(self, position): 
+        self.position = position
     
-    '''def clear_up_checking_moves(self, moves):
-        #print(f'{moves} are the moves')
-        from_position = self.position
-        for move in moves:
-            if self.board.move_puts_king_in_check(from_position, move):
-                moves.remove(move)
-        return moves'''
-    
+    # getter to above
+    def get_position(self): 
+        return self.position
+        
     def update_legal_moves(self):
         self.legal_moves = self.calculate_legal_moves()
     
-    def get_legal_moves(self) -> list: #This returns the legal moves of the piece, and clears the moves which would put the king in check for that person
-        return  self.legal_moves
+    #This returns the legal moves of the piece
+    def get_legal_moves(self) -> list: 
+        return self.legal_moves
 
     def calculate_legal_moves(self) -> list:
-        pass
-    
-    def get_special_moves(self) -> list:
-        return self.special_moves
-    
-    def calculate_special_moves(self):
-        pass
-    
-    def update_special_moves(self):
-        self.special_moves = self.calculate_special_moves()
-    
-    def is_pinned(self):
-        pass
-    
-    def set_position(self, position): # this sets the position of the piece
-        self.position = position
-    
-    def get_position(self): # getter to above
-        return self.position
-    
-    def get_coordinates(self):
-        return self.position_to_coordinate(self.position)
-
-    def is_valid_position(self, position): # this checks if the square is inside the grid, maybe not necessary but nice to have
-        if len(position) != 2:
-            return False
-        col, row = position
-        if col not in 'abcdefgh' or row not in '12345678':
-            return False
-        return True
-    
-    # this checks if a move is valid, a move is then not a capture
-    def is_valid_move(self,move_position: str):
-        if self.get_piece_on(move_position) == None: # since we cannot click outside the square this works
-            return self.is_valid_position(move_position)
-        else:
-            return self.is_valid_position(move_position) and not self.get_piece_on(move_position).color == self.color # we check if it is not the same color as it's own and
+        raise NotImplementedError("Pieces must implement calculate_legal_moves method")
     
     def coordinate_to_position(self, coordinate: tuple) -> str:
         col, row = coordinate
@@ -80,29 +42,44 @@ class Piece:
         coordinate = (ord(col) - 97, int(row) - 1)  # Letter to column index, 1-based to 0-based
         return coordinate
     
-    # below we override equal function and hash function to make sure we can compare pieces and use them in dicts and sets
-    def __eq__(self, other):
-        if other is None:
+    # this checks if the square is inside the grid, maybe not necessary but nice to have
+    def is_valid_position(self, position): 
+        if len(position) != 2:
             return False
-        return self.color == other.color and self.type == other.type and self.position == other.position
+        col, row = position
+        if col not in 'abcdefgh' or row not in '12345678':
+            return False
+        return True
     
-    def __hash__(self):
-        return hash((self.color, self.type, self.position))
-
+    # this checks if a move is valid, a move is then not a capture
+    def is_valid_move(self,move_position: str):
+        # since we cannot click outside the square this works
+        if self.get_piece_on(move_position) == None: 
+            return self.is_valid_position(move_position)
+        else:
+            # we check if it is not the same color as it's own and if it is a valid position
+            return self.is_valid_position(move_position) and not self.get_piece_on(move_position).color == self.color 
+        
+    def get_piece_on(self, position):
+        return self.board.get_piece_at_position(position)
+    
 
 class Pawn(Piece):
-    def __init__(self, color, position, board: B):
+    def __init__(self, color, position, board: Board):
         super().__init__(color, 'Pawn', position, board)
         self.has_moved = False
         
-    # this needs to handle enpassant and promotion
-    def calculate_special_moves(self):
+    def en_passant(self):
+        pass
+    
+    def promotion(self):
+        pass
+    
+    def big_pawn_move(self):
         pass
         
     def calculate_legal_moves(self) -> list:
         possible_moves = []
-        if self.is_pinned:
-            return possible_moves  # Pawns cannot move if pinned
 
         board = self.board
         x, y = self.position_to_coordinate(self.position)  # Get 0-7 coordinates
@@ -111,21 +88,24 @@ class Pawn(Piece):
         direction = 1 if self.color == 'White' else -1
 
         # Move forward by 1 square (only if the square is empty)
-        if not board.get_at_position(self.coordinate_to_position((x, y + direction))):
+        if not board.get_piece_at_position(self.coordinate_to_position((x, y + direction))):
             possible_moves.append((x, y + direction))
 
         # Move forward by 2 squares on the first move (only if both squares are empty)
-        if not self.has_moved:
+        if not self.has_moved and (x == 1 or x==6):
+            
             intermediate_position = self.coordinate_to_position((x, y + direction))
             final_position = self.coordinate_to_position((x, y + 2 * direction))
-            if not board.get_at_position(intermediate_position) and not board.get_at_position(final_position):
+            
+            if not board.get_piece_at_position(intermediate_position) and not board.get_piece_at_position(final_position):
                 possible_moves.append((x, y + 2 * direction))
 
         # Capture diagonally (check if the target square contains an enemy piece)
         for dx in [-1, 1]:  # Check both left (-1) and right (+1) diagonal
             target_x, target_y = x + dx, y + direction
             target_position = self.coordinate_to_position((target_x, target_y))
-            target_piece = board.get_at_position(target_position)
+            
+            target_piece = board.get_piece_at_position(target_position)
             if target_piece and target_piece.color != self.color:  # Enemy piece
                 possible_moves.append((target_x, target_y))
 
@@ -140,7 +120,8 @@ class Pawn(Piece):
         return legal_moves
      
 class Rook(Piece):
-    def __init__(self, color, position, board: dict):
+    
+    def __init__(self, color, position, board: Board):
         super().__init__(color, 'Rook', position, board)
         self.has_moved = False
 
@@ -149,9 +130,6 @@ class Rook(Piece):
         x, y = self.position_to_coordinate(self.position)
         
         legal_moves = []
-        if self.is_pinned:
-            print('Pinned')
-            return legal_moves
         
         for dx, dy in [(0, 1), (0, -1), (1, 0), (-1, 0)]:  # Four possible directions for the rook
             for i in range(1, 8):  # Maximum range for a rook
@@ -160,7 +138,8 @@ class Rook(Piece):
                 
                 if not self.is_valid_move(target_position):  # Check if the position is valid, either that it is blocked by friendly piece or outside the board
                     break  # Stop searching in this direction
-                target_piece = board.get_at_position(target_position)
+                
+                target_piece = board.get_piece_at_position(target_position)
                 
                 if not target_piece:  # Empty square
                     legal_moves.append(target_position)
@@ -173,7 +152,8 @@ class Rook(Piece):
         return legal_moves
 
 class Knight(Piece):
-    def __init__(self, color, position, board: B):
+    
+    def __init__(self, color, position, board: Board):
         super().__init__(color, 'Knight', position, board)
 
     def calculate_legal_moves(self):
@@ -206,10 +186,11 @@ class Knight(Piece):
             if not self.is_valid_move(target_position):  # Check if valid move
                 continue  # Skip this move if it goes off the board
             
-            target_piece = board.get_at_position(target_position)
+            target_piece = board.get_piece_at_position(target_position)
 
             if not target_piece:  # Empty square
                 legal_moves.append(target_position)
+                
             else:
                 if target_piece.color != self.color:  # Opponent's piece
                     legal_moves.append(target_position)
@@ -219,7 +200,7 @@ class Knight(Piece):
 
 class Bishop(Piece):
     
-    def __init__(self, color, position, board: B):
+    def __init__(self, color, position, board: Board):
         super().__init__(color, 'Bishop', position, board)
 
     def calculate_legal_moves(self):
@@ -227,9 +208,6 @@ class Bishop(Piece):
         x, y = self.position_to_coordinate(self.position)
         
         legal_moves = []
-        if self.is_pinned:
-            print('Pinned')
-            return legal_moves  # Bishop cannot move if pinned
 
         # Diagonal directions for the bishop
         for dx, dy in [(1, 1), (1, -1), (-1, 1), (-1, -1)]:  # Four diagonals
@@ -239,7 +217,7 @@ class Bishop(Piece):
                 if not self.is_valid_move(target_position):  # Check if within bounds
                     break  # Stop searching in this direction
                 
-                target_piece = board.get_at_position(target_position)
+                target_piece = board.get_piece_at_position(target_position)
 
                 if not target_piece:  # Empty square
                     legal_moves.append(target_position)
@@ -252,7 +230,7 @@ class Bishop(Piece):
         return legal_moves
 
 class Queen(Piece):
-    def __init__(self, color, position, board: B):
+    def __init__(self, color, position, board: Board):
         super().__init__(color, 'Queen', position, board)
         
     def calculate_legal_moves(self):
@@ -260,9 +238,6 @@ class Queen(Piece):
         x, y = self.position_to_coordinate(self.position)
         
         legal_moves = []
-        if self.is_pinned:
-            print('Pinned')
-            return legal_moves  # Queen cannot move if pinned
 
         # Directions for the queen (diagonal + straight-line)
         directions = [
@@ -279,7 +254,7 @@ class Queen(Piece):
                 if not self.is_valid_move(target_position):  # Check if within bounds
                     break  # Stop searching in this direction
                 
-                target_piece = board.get_at_position(target_position)
+                target_piece = board.get_piece_at_position(target_position)
 
                 if not target_piece:  # Empty square
                     legal_moves.append(target_position)
@@ -293,14 +268,10 @@ class Queen(Piece):
 
 class King(Piece):
     
-    def __init__(self, color, position, board: B):
+    def __init__(self, color, position, board: Board):
         super().__init__(color, 'King', position, board)
         self.has_moved = False
         self.is_checked = False
-        
-    # This needs to handle castling
-    def calculate_special_moves(self):
-        pass
                         
     def calculate_legal_moves(self):
         # Get the current board and convert the king's position (e.g., 'e4') to (x, y) coordinates.
@@ -331,10 +302,7 @@ class King(Piece):
             if not self.is_valid_move(target_position):
                 continue  # Skip this direction if it goes off the board.
             
-            if not board.is_square_safe(target_position, self.color):
-                continue  # Skip this direction if the king is moving into check.
-            
-            target_piece = board.get_at_position(target_position)
+            target_piece = board.get_piece_at_position(target_position)
             
             # A move is legal if the target square is empty or contains an opponent's piece.
             if not target_piece or target_piece.color != self.color:

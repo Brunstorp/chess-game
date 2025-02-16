@@ -1,17 +1,23 @@
 import pygame
-import board as B  # Assuming you have a separate `board.py` with a Board class.
-from pieces import Piece
+import chessgame as ChessGame  # Assuming you have a separate `board.py` with a Board class.
+import board as Board
+from piece import Piece
 # Initialize pygame
 pygame.init()
 
 class GUI:
-    def __init__(self, size=600, chessboard = None):
+    def __init__(self, chessgame: ChessGame, size=600, chessboard: Board = None):
+        
         # Initialize board
         self.chessboard = chessboard
+        
+        self.chessgame = chessgame
+        
         # Window settings
         self.WIDTH = self.HEIGHT = size
         self.SQUARE_SIZE = self.WIDTH // 8
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        
         pygame.display.set_caption("Chess Game")
         
         # Load piece images
@@ -20,7 +26,7 @@ class GUI:
         # Draw the board and pieces intially
         self.colors = [(255, 255, 255), (139, 69, 19)]  # White and Brown color codes
         self.draw_board()
-        self.draw_pieces()
+        self.draw_all_pieces()
         
         # Selected piece
         self.selected_piece = None
@@ -55,13 +61,13 @@ class GUI:
         return x, y
     
     # and this is obviously just the inverse of the above function
-    def get_position(self, x: int, y: int) -> str:
+    def get_position_from_coordinates(self, x: int, y: int) -> str:
         col = chr(x // self.SQUARE_SIZE + 97)
         row = str(8 - y // self.SQUARE_SIZE)
         return f'{col}{row}'
         
     # this draws the pieces initially
-    def draw_pieces(self):
+    def draw_all_pieces(self):
         for row in range(8, 0, -1):  # Rows 8 to 1 (standard chess notation)
             for col in 'abcdefgh':  # Columns a to h
                 position = f'{col}{row}'
@@ -116,13 +122,15 @@ class GUI:
             # Get the mouse position
             mouse_x, mouse_y = pygame.mouse.get_pos()
             mouse_x, mouse_y = pygame.mouse.get_pos()
+            
             col = mouse_x // self.SQUARE_SIZE
             row = mouse_y // self.SQUARE_SIZE
-            clicked_position = self.get_position(mouse_x, mouse_y)  # Convert pixel position to board position
-
+            
+            clicked_position = self.get_position_from_coordinates(mouse_x, mouse_y)  # Convert pixel position to board position
+            
             if not self.selected_piece:
                 # First click: Select a piece
-                selected_piece = self.chessboard.board.get(clicked_position)
+                selected_piece = self.chessboard.get_piece_at_position(clicked_position)
                 
                 if selected_piece:  # Check if there's a piece on the selected square
                     self.selected_piece = selected_piece
@@ -130,11 +138,13 @@ class GUI:
                     print('Selected:', self.selected_piece, self.selected_position)
                        
             else:
+                
                 # Second click: Attempt to move the piece
                 print(f'Trying to move {self.selected_piece} from {self.selected_position} to {clicked_position}') 
                 
                 # here I want to add that if we try to move to a square that is occupied by a piece of the same color, that square shpuld just be selected instead
-                success = self.chessboard.play_turn(self.selected_position, clicked_position)
+                success = self.chessgame.play_turn(self.selected_position, clicked_position)
+                
                 if success:
                     self.move_piece(self.selected_piece, clicked_position)  # Update the board state and GUI
                     print('Move successful!')
@@ -149,6 +159,7 @@ class GUI:
     def run(self):
         """ Main game loop """
         self.running = True
+        
         while self.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -165,8 +176,10 @@ class GUI:
 
 # Run the GUI
 if __name__ == '__main__':
-    chessboard = B.Board()
+    chessboard = Board.Board()
     chessboard.setup()
-    gui = GUI(900, chessboard)
+    chessgame = ChessGame.ChessGame(chessboard)
+    
+    gui = GUI(chessgame, 900, chessboard)
     gui.run()    
     

@@ -1,16 +1,19 @@
-import board as B
-import gui as G
-import pieces as P
+import board as Board
+import gui as GUI
+import piece as Piece
+import chessgame as ChessGame
 
-def test_castling(chessboard: B):
-    king = P.King('White', 'e1', chessboard)
+def test_castling(chessboard: Board):
+    king = Piece.King('White', 'e1', chessboard)
     chessboard.place_piece(king, king.get_position())  
-    chessboard.place_piece(P.Rook('Black', 'a8', chessboard), 'a8') 
+    chessboard.place_piece(Piece.Rook('Black', 'a8', chessboard), 'a8') 
 
 if __name__ == '__main__':
-    testboard = B.Board()
-    testboard.testing = False
+    testboard = Board.Board()
+    
+    chessgame = ChessGame.ChessGame(testboard)
+    chessgame.testing = True
     test_castling(testboard)
-    testboard.setup_pieces_dict()
-    gui = G.GUI(900, testboard)
+    
+    gui = GUI.GUI(chessgame, 900, testboard)
     gui.run()

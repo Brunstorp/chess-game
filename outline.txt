@@ -9,6 +9,8 @@ en passant
 how are we going to handle checks?
 How am I going to handle pins?
 
+
+
 We only need to check for checkmate after a check
 stalemate is when one player has no moves but is not in check
 
@@ -16,6 +18,7 @@ and then who knows I might even build a chess960 emulator
 
 GUI:
 how can I implement a clock? How can I implement highlighting of selected square/piece? How can I implement to show who's turn it is? How can I flip the board? (that one will be really hard)
+How can I implement so if we click a piece, and click a square where it can't move, that piece is just still selected in the gui? How to diplay who won in gui?
 
 pawn:
 moves correctly, haven't implemented en passant nor promotion, 
@@ -24,7 +27,7 @@ rook:
 moves correctly, no castling yet
 
 king:
-moves correctly, no castling and I need to add check, checkmate
+moves correctly, no castling and I need to add check, checkmate, also it can as of now walk into a pawn diagonal move since that doesnt come up in the possible moves yet. 
 
 queen:
 moves correctly, actually done
