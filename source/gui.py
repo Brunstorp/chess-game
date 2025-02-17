@@ -1,18 +1,16 @@
 import pygame
 import chessgame as ChessGame  # Assuming you have a separate `board.py` with a Board class.
-import board as Board
-from piece import Piece
+import chess
+
 
 # Initialize pygame
 pygame.init()
 
 class GUI:
-    def __init__(self, chessgame: ChessGame, size=600, chessboard: Board = None):
-        
-        # Initialize board
-        self.chessboard = chessboard
+    def __init__(self, chessgame: ChessGame, size=600):
         
         self.chessgame = chessgame
+        self.chessboard = chessgame.get_board()
         
         # Window settings
         self.WIDTH = self.HEIGHT = size
@@ -21,13 +19,10 @@ class GUI:
         
         pygame.display.set_caption("Chess Game")
         
-        # Load piece images
-        self.load_images()
-        
         # Draw the board and pieces intially
         self.colors = [(255, 255, 255), (139, 69, 19)]  # White and Brown color codes
-        self.draw_board()
-        self.draw_all_pieces()
+        self.draw_squares()
+        self.draw_pieces()
         
         # Selected piece
         self.selected_piece = None
@@ -36,23 +31,22 @@ class GUI:
         # Run the game
         self.running = False
         
-    def load_images(self):
-        # Load piece images
-        self.piece_images = {}
-        if not self.chessboard: # makes sure we can have a clear testing board
-            return
-        colors = self.chessboard.colors
-        piece_types = self.chessboard.pieces.copy()  # Add pawn to the list of pieces and copy so we don't change in the original list
-        piece_types.append('Pawn')
-        
-        for color in colors:
-            for piece_type in piece_types:
-                piece_name = f"{color}_{piece_type}".lower()  # Example: "white_pawn"
-                image = pygame.image.load(f"../pictures/{piece_name}.png")
-                self.piece_images[piece_name] = pygame.transform.scale(
-                    image,
-                    (self.SQUARE_SIZE, self.SQUARE_SIZE)  # Scale to match board squares
-                )
+    def piece_to_string(self,piece):
+        """Converts a chess.Piece object to a string like 'black_queen' or 'white_knight'."""
+        if piece is None:
+            return None
+
+        color = "white" if piece.color == chess.WHITE else "black"
+        piece_name = {
+            chess.PAWN: "pawn",
+            chess.KNIGHT: "knight",
+            chess.BISHOP: "bishop",
+            chess.ROOK: "rook",
+            chess.QUEEN: "queen",
+            chess.KING: "king",
+        }[piece.piece_type]
+
+        return f"{color}_{piece_name}"
           
     # this is to go from say 'a1' to whatever that becomes in the window      
     def get_window_coordinates(self, position: str) -> tuple:
@@ -67,26 +61,32 @@ class GUI:
         row = str(8 - y // self.SQUARE_SIZE)
         return f'{col}{row}'
         
-    # this draws the pieces initially
-    def draw_all_pieces(self):
+    # this draws all th epieces on the board
+    def draw_pieces(self):
         for row in range(8, 0, -1):  # Rows 8 to 1 (standard chess notation)
             for col in 'abcdefgh':  # Columns a to h
-                position = f'{col}{row}'
-                if position in self.chessboard.board:
-                    self.draw_piece(self.chessboard.board.get(position), position)
+                square_str = f'{col}{row}'
+                square = chess.parse_square(square_str)
+                piece = self.chessboard.piece_at(square)
+                if piece:
+                    self.draw_piece(piece, square)
            
     # this is to draw a generic piece         
-    def draw_piece(self, piece: Piece, position: tuple):
+    def draw_piece(self, piece: chess.Piece, square: chess.Square):
         
-        if not piece:
-            return
+        square_str = chess.square_name(square)
         
-        col, row = position
+        x, y = self.get_window_coordinates(square_str)
         
-        if piece:
-            piece_name = f"{piece.color}_{piece.type}".lower()
-            x,y = self.get_window_coordinates(position)
-            self.screen.blit(self.piece_images[piece_name], (x, y))
+        piece_name = self.piece_to_string(piece)
+        
+        if piece_name:
+            image = pygame.image.load(f"../pictures/{piece_name}.png")
+            image = pygame.transform.scale(
+                    image,
+                    (self.SQUARE_SIZE, self.SQUARE_SIZE)  # Scale to match board squares
+                )
+            self.screen.blit(image, (x, y))
             
     def draw_square(self,x:int,y:int): # this takes in the coordinates in the window
         color = self.colors[((x + y) // self.SQUARE_SIZE) % 2]
@@ -96,8 +96,8 @@ class GUI:
                     pygame.Rect(x, y, self.SQUARE_SIZE, self.SQUARE_SIZE)
                 )
 
-    # this draws the board
-    def draw_board(self):
+    # this draws the board, meaning the background
+    def draw_squares(self):
         """ Draw the chessboard """
         for row in range(8):
             for col in range(8):
@@ -120,7 +120,8 @@ class GUI:
             
             if not self.selected_piece:
                 # First click: Select a piece
-                selected_piece = self.chessboard.get_piece_at_position(clicked_position)
+                selected_square = chess.parse_square(clicked_position)
+                selected_piece = self.chessboard.piece_at(selected_square)
                 
                 if selected_piece:  # Check if there's a piece on the selected square
                     self.selected_piece = selected_piece
@@ -133,16 +134,22 @@ class GUI:
                 print(f'Trying to move {self.selected_piece} from {self.selected_position} to {clicked_position}') 
                 
                 # here I want to add that if we try to move to a square that is occupied by a piece of the same color, that square shpuld just be selected instead
-                success = self.chessgame.play_turn(self.selected_position, clicked_position)
+                from_square = chess.parse_square(self.selected_position)
+                to_square = chess.parse_square(clicked_position)
+                
+                success = self.chessgame.play_turn(from_square, to_square)
                 
                 if success:
                     print('Move successful!')
+                    
                 else:
                     print('Did not move, try again.')
-                
+                    
                 # Deselect the piece after the move attempt
                 self.selected_piece = None
                 self.selected_position = None
+                
+                
     
     # here we run the game
     def run(self):
@@ -159,21 +166,12 @@ class GUI:
                     self.play_turn(event)
             
             # realized it is so fast that I can just brute force the whole thing, sometimes it is nice to be lazy engineering
-            self.draw_board()
-            self.draw_all_pieces()
+            self.draw_squares()
+            self.draw_pieces()
             
             # Update the display
             pygame.display.flip()
 
         # Quit Pygame
         pygame.quit()
-
-# Run the GUI
-if __name__ == '__main__':
-    chessboard = Board.Board()
-    chessboard.setup()
-    chessgame = ChessGame.ChessGame(chessboard)
-    
-    gui = GUI(chessgame, 900, chessboard)
-    gui.run()    
     

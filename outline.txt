@@ -3,13 +3,6 @@ Afterwards (waaay down the line) the idea is to also build a chess computer and 
 I think next step is to start implementing legal moves
 I also need:
 check for checkmate, stalemate
-castling, and castling rightd
-promotion
-en passant
-how are we going to handle checks?
-How am I going to handle pins?
-
-
 
 We only need to check for checkmate after a check
 stalemate is when one player has no moves but is not in check
@@ -20,22 +13,3 @@ GUI:
 how can I implement a clock? How can I implement highlighting of selected square/piece? How can I implement to show who's turn it is? How can I flip the board? (that one will be really hard)
 How can I implement so if we click a piece, and click a square where it can't move, that piece is just still selected in the gui? How to diplay who won in gui?
 
-pawn:
-moves correctly, haven't implemented en passant nor promotion, 
-
-rook:
-moves correctly, no castling yet
-
-king:
-moves correctly, no castling and I need to add check, checkmate, also it can as of now walk into a pawn diagonal move since that doesnt come up in the possible moves yet. 
-
-queen:
-moves correctly, actually done
-
-knight:
-moves correctly, done
-
-bishop:
-moves correctly, done
-
-then I mean the plan is to make a dockerfile, make this into an application, and have a local chess computer

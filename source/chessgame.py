@@ -1,97 +1,67 @@
-import board as Board
-import piece as Piece
-import mover as Mover
-
-
+import chess
+from chess import Move
 # this class keeps track of all the game logic
 class ChessGame:
+    def __init__(self, board, testing: bool = False):
+        self.chessboard = board
+        self.turn = self.chessboard.turn
+        self.testing = testing
+        
+    def get_board(self):
+        return self.chessboard
     
-    def __init__(self, chessboard: Board):
-        self.chessboard = chessboard
-        self.turn = 'White'
-        # Game log
-        self.game_log = {}
-        self.current_move_number = 0 # used for keeping track of the current move number
+    def set_board(self, board):
+        self.chessboard = board
         
-        self.update_all_legal_moves()
-        
-        #boolean used for testing
-        self.testing = False
+    def get_turn(self):
+        return self.turn
     
-    # switches the turn
-    def switch_turn(self):  
-        self.turn = 'White' if self.turn == 'Black' else 'Black'
+    def set_turn(self, turn):
+        self.turn = turn
+        self.chessboard.turn = turn
         
-    def get_last_move(self):
-        if len(self.game_log) == 0:
-            print('No moves have been played yet')
-            return None
-        
-        else:      
-            return self.game_log[self.current_move_number - 1]
-        
-    # updates and keeps track of which moves has happened
-    def update_game_log(self, start_pos: tuple, end_pos: tuple, piece: str, old_board: Board):
-        self.game_log[self.current_move_number] = (start_pos, end_pos, piece, old_board)
-        #print(self.game_log)
-        
-    # updates all legal moves for each piece on the board
-    def update_all_legal_moves(self):
-        current_board = self.chessboard.get_board_state()
-        for piece in current_board.values():
-            if piece:
-                piece.update_legal_moves()
-                
-    def move_piece(self, start: tuple, end: tuple, piece: Piece) -> bool:
-        
-        legal_moves = piece.get_legal_moves()
-        
-        print("The legal moves are: ", legal_moves)
-        
-        if piece.color != self.turn:
-                print(f'Not {piece.color}s turn')
-                return False
-        
-        if end in legal_moves:
-            self.chessboard.place_piece(piece, end)
-            self.chessboard.clear_square(start)
+    def is_valid_move(self, move: Move) -> bool:
+        if move in self.chessboard.legal_moves:
+            return True
+        return False
+    
+    def check_for_promotion(self, move: Move) -> bool:
+        # Check if it's a pawn reaching the last rank
+        piece = self.chessboard.piece_at(move.from_square)
+        if piece and piece.piece_type == chess.PAWN:
+            if chess.square_rank(move.to_square) in [0, 7]:  # Last rank
+                return True
+        return False
+    
+    def promote_pawn(self, move: Move, promotion_piece: chess.Piece = chess.QUEEN) -> None:
+        return chess.Move(move.from_square, move.to_square, promotion=promotion_piece)
 
-            piece.set_position(end)
+    def move(self, from_square, to_square)  -> bool:
+        
+        move = chess.Move(from_square, to_square)
+        
+        if self.check_for_promotion(move):
+            move = self.promote_pawn(move)
             
-            if isinstance(piece,Piece.Pawn) or isinstance(piece,Piece.Rook) or isinstance(piece,Piece.King):
-                    piece.has_moved = True
-                    
+        if self.is_valid_move(move):
+            self.chessboard.push(move)
             return True
         
-        if end not in legal_moves:
-            print('Invalid move')
-            return False
+        return False
         
-    # tries to play the turn the piece from start to end and returns true if successful
-    def play_turn(self, start: str, end: str) -> bool:
+    def is_game_over(self) -> bool:
+        return self.chessboard.is_game_over()    
         
-        self.update_all_legal_moves()
+    def play_turn(self, from_square, to_square):
         
-        old_board = self.chessboard.get_board_state()
+        moved = self.move(from_square, to_square)
+
+        if self.testing:
+            print(self.chessboard.turn)
+            self.set_turn(not self.chessboard.turn)
         
-        piece = self.chessboard.get_piece_at_position(start)
+        return moved
+    
+    
         
-        if piece:
-            
-            piece_moved = self.move_piece(start, end, piece)
-            
-            if piece_moved:
-                
-                # here we update the game log
-                self.update_game_log(start, end, piece, old_board)
-                self.current_move_number += 1
-                
-                # I use the testing variable to avoid switching turns when testing
-                if not self.testing: self.switch_turn() 
-                
-                return True
-        
-        else:
-            print('No piece at that position')
-            return False    
-        
+    
