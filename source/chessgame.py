@@ -1,11 +1,12 @@
 import chess
 from chess import Move
-# this class keeps track of all the game logic
+# this class keeps track of all the game logic and useful functions
 class ChessGame:
     def __init__(self, board, testing: bool = False):
         self.chessboard = board
         self.turn = self.chessboard.turn
         self.testing = testing
+        self.outcome = board.outcome()
         
     def get_board(self):
         return self.chessboard
@@ -43,14 +44,26 @@ class ChessGame:
         if self.check_for_promotion(move):
             move = self.promote_pawn(move)
             
+        # checks if the move is valid, if it is moves
         if self.is_valid_move(move):
             self.chessboard.push(move)
             return True
         
         return False
         
-    def is_game_over(self) -> bool:
-        return self.chessboard.is_game_over()    
+    def is_game_over(self) -> None:
+        outcome = self.chessboard.outcome()
+        if outcome:
+            print("Game over!")
+            print(f"Termination: {outcome.termination}")
+            if outcome.winner is None:
+                print("The game is a draw.")
+            elif outcome.winner == chess.WHITE:
+                print("White wins!")
+            else:
+                print("Black wins!")
+        else:
+            print("The game is still ongoing.")
         
     def play_turn(self, from_square, to_square):
         
@@ -59,6 +72,8 @@ class ChessGame:
         if self.testing:
             print(self.chessboard.turn)
             self.set_turn(not self.chessboard.turn)
+        
+        self.is_game_over()
         
         return moved
     
