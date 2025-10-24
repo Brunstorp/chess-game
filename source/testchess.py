@@ -22,6 +22,6 @@ def test_normal(board):
     
     
 if __name__ == '__main__':
-    board = chess.Board()
+    board=chess.Board.from_chess960_pos(519)
     test_normal(board)
     #test_promotion(board)
