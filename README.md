@@ -53,11 +53,12 @@ pipenv run python main.py
 │   ├── main.py
 │   ├── gui.py
 │   ├── chessgame.py
-│   ├── requirements.txt
+│   
 │   └── pictures/
 │       ├── white_pawn.png
 │       ├── black_queen.png
 │       └── ... etc.
+├── requirements.txt
 └── README.md
 ```
 
